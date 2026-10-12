@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Target Cost Calculator</title>
+<meta name="description" content="Target Cost Management (market-into-company): enter market data, functions, components and the function-component matrix; get allowable costs, target cost indices and the target cost control chart.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a2a6c'/%3E%3Cpath d='M2 14 14 2' stroke='%23e6c9a8' stroke-width='2'/%3E%3Crect x='3' y='9' width='3' height='3' fill='%23b22222'/%3E%3Crect x='10' y='4' width='3' height='3' fill='%23e6c9a8'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#ffffff">
+<style>
+  /* Late-90s look: Times body, Verdana labels, Windows 95 controls. */
+  :root { --muted: #555; --red: #b22222; --navy: #1a2a6c; --rust: #a0381c; --green: #1d6b2a;
+          --ink: #000; --ok: #1d6b2a; --bad: #b22222; --warn: #c06a00; --zone: rgba(26,42,108,.10); }
+  * { box-sizing: border-box; border-radius: 0 !important; }
+  @supports (-moz-appearance: none) { html { scrollbar-color: #c0c0c0 #dfdfdf; } }
+  ::-webkit-scrollbar { width: 16px; height: 16px; }
+  ::-webkit-scrollbar-track { background: repeating-conic-gradient(#c0c0c0 0 25%, #fff 0 50%) 0 0 / 2px 2px; }
+  ::-webkit-scrollbar-thumb { background: #c0c0c0; border: 2px outset #f4f4f4; box-shadow: inset -1px -1px #808080; }
+  ::-webkit-scrollbar-corner { background: #c0c0c0; }
+  body { margin: 0; background: #fff; color: #000; font: 17px/1.35 "Times New Roman", Times, Georgia, serif; }
+  .wrap { max-width: 1180px; margin: 0 auto;
+          padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+                   max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  .masthead { text-align: center; padding: 10px 0 6px; }
+  .masthead h1 { margin: 0; font-size: clamp(32px, 7vw, 66px); font-weight: 700; letter-spacing: .05em;
+                 color: var(--navy); text-shadow: 3px 3px 0 #c9d3ee; line-height: 1.05; }
+  .masthead .tagline { font-style: italic; color: var(--muted); margin-top: 6px; font-size: 16px; }
+  hr.groove { border: 0; border-top: 2px groove #ccc; margin: 14px 0; }
+  h2 { margin: 30px 0 12px; text-align: center; }
+  h2 span.label { display: inline-block; padding: 4px 14px 3px; background: #fff;
+         border-right: 3px solid #aaa; border-bottom: 3px solid #aaa; box-shadow: 3px 3px 4px rgba(0,0,0,.18);
+         font: bold 16px Verdana, Geneva, sans-serif; letter-spacing: .25em; color: var(--navy); }
+  h2 span.label small { font-size: 11px; letter-spacing: .15em; color: var(--rust); margin-right: 8px; }
+  h3 { font: bold 12px Verdana, sans-serif; margin: 14px 0 4px; }
+  .note { max-width: 820px; margin: 0 auto 12px; text-align: center; font-size: 15px; }
+  .small { font: 11px/1.6 Verdana, Geneva, sans-serif; color: var(--muted); }
+
+  /* Win95 controls */
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  button { font: 12px Verdana, sans-serif; padding: 4px 12px; background: #dcdcdc; color: #000;
+           border: 2px outset #f4f4f4; cursor: pointer; }
+  button:active { border-style: inset; background: #c8c8c8; }
+  button.primary { font-weight: bold; }
+  button.x { padding: 0 5px; font-size: 11px; margin-left: 4px; line-height: 14px; }
+  input { font: 13px "Courier New", Courier, monospace; color: #000; background: #fff; border: 2px inset #ddd;
+          padding: 3px 5px; width: 100%; }
+  input:focus { outline: 1px dotted #000; outline-offset: -4px; }
+  input.num { text-align: right; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; max-width: 900px; margin: 0 auto; }
+  label.f { display: flex; flex-direction: column; gap: 3px; font: bold 10px Verdana, sans-serif; letter-spacing: .1em;
+            color: var(--muted); text-transform: uppercase; }
+
+  /* Tables */
+  .scroll { overflow-x: auto; margin-top: 8px; border: 2px inset #ddd; }
+  table { border-collapse: collapse; width: 100%; font: 12px/1.4 Verdana, Geneva, sans-serif; }
+  th, td { padding: 4px 8px; border-bottom: 1px solid #ddd; text-align: right; white-space: nowrap;
+           font-family: "Courier New", Courier, monospace; font-size: 13px; }
+  th:first-child, td:first-child { text-align: left; font-family: Verdana, Geneva, sans-serif; font-size: 12px; }
+  th { background: #c0c0c0; border-bottom: 2px solid #808080; font: bold 12px Verdana, sans-serif; }
+  tbody tr:nth-child(even) td { background: #f6f6f6; }
+  thead tr + tr th { background: #dcdcdc; font-weight: normal; }
+  tr.total td { font-weight: bold; border-top: 2px solid #808080; }
+  td.b { font-weight: bold; }
+  .matrix input { min-width: 64px; }
+  .matrix th input { min-width: 100px; font-weight: bold; }
+  .matrix th { white-space: nowrap; }
+  .warn { color: var(--red); font-weight: bold; }
+  .okc { color: var(--green); } .badc { color: var(--red); } .warnc { color: var(--warn); }
+  .pill { font: bold 11px Verdana, sans-serif; }
+  #msgs:empty { display: none; }
+  #msgs { border: 2px solid var(--red); background: #ffffe1; padding: 8px 12px; margin: 10px auto; max-width: 820px;
+          font: 12px/1.6 Verdana, sans-serif; color: var(--red); }
+
+  /* Stat tiles */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 14px 0 6px; }
+  .kpi { border: 2px outset #eee; background: #f4f4f4; padding: 8px 10px; text-align: center; }
+  .kpi .l { font: bold 10px Verdana, sans-serif; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  .kpi .v { font: bold 21px "Courier New", Courier, monospace; margin: 2px 0; white-space: nowrap; }
+
+  /* Charts */
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 20px 34px; }
+  .chartbox { border: 2px inset #ddd; background: #fff; padding: 6px; }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { fill: #000; font: 11px Verdana, sans-serif; }
+  svg .ax { stroke: #000; } svg .gr { stroke: #e4e4e4; } svg .tick { fill: var(--muted); font-size: 10px; }
+
+  /* Theory dialogs (Win95 window) */
+  button.help { padding: 0 6px; font: bold 12px Verdana, sans-serif; margin-left: 8px; vertical-align: 3px; }
+  a.term { color: #0000ee; text-decoration: none; border-bottom: 1px dotted #0000ee; cursor: help; }
+  dialog#theory { padding: 0; border: 2px outset #f4f4f4; background: #c0c0c0; width: min(680px, calc(100vw - 24px));
+                  max-height: calc(100vh - 40px); box-shadow: 4px 4px 0 rgba(0,0,0,.35); }
+  dialog#theory::backdrop { background: rgba(0,0,0,.25); }
+  .titlebar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 3px 3px 6px;
+              background: linear-gradient(90deg, #000080, #1084d0); color: #fff; font: bold 12px Verdana, sans-serif; }
+  .titlebar button { padding: 0 5px; font: bold 11px Verdana, sans-serif; line-height: 14px; }
+  .tbody { margin: 6px; background: #fff; border: 2px inset #ddd; padding: 12px 16px; overflow-y: auto;
+           max-height: calc(100vh - 140px); font-size: 16px; }
+  .tbody h4 { font: bold 13px Verdana, sans-serif; color: var(--navy); margin: 14px 0 4px; letter-spacing: .05em; }
+  .tbody h4:first-child { margin-top: 0; }
+  .tbody p { margin: 6px 0; } .tbody ul, .tbody ol { margin: 6px 0; padding-left: 22px; } .tbody li { margin-bottom: 4px; }
+  .tbody .formula { font: 14px "Courier New", Courier, monospace; background: #ffffe1; border: 1px solid #000;
+                    padding: 6px 10px; margin: 8px 0; white-space: pre-wrap; }
+  .tbody .tip { border-left: 4px solid var(--rust); padding: 4px 10px; background: #f6f6f6; font-size: 15px; }
+  .tbody .ref { font: 11px Verdana, sans-serif; color: var(--muted); margin-top: 12px; border-top: 1px dotted #999; padding-top: 6px; }
+  .tbody table { margin: 6px 0; } .tbody td, .tbody th { text-align: left; white-space: normal; font-family: Verdana, sans-serif; font-size: 12px; }
+  .tbody ol.toc a { color: #0000ee; }
+  .tnav { display: flex; justify-content: space-between; gap: 6px; padding: 0 6px 6px; }
+
+  footer { text-align: center; margin-top: 34px; }
+  @media (max-width: 560px) { body { font-size: 16px; } h2 span.label { letter-spacing: .15em; font-size: 14px; } }
+  @media print {
+    .noprint, button.x { display: none !important; }
+    section { break-inside: avoid; }
+    input { border: none; padding: 0; }
+    .masthead h1 { text-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="masthead">
+  <h1>Target Cost Calculator</h1>
+  <div class="tagline">Market-into-company target costing, from customer weightings to the control chart</div>
+</div>
+<hr class="groove">
+<div class="btns noprint">
+  <button id="bExample">Load gMobile example</button>
+  <button id="bClear">Clear</button>
+  <button data-theory="toc">Theory</button>
+  <button class="primary" onclick="window.print()">Print / PDF</button>
+</div>
+
+<div id="msgs"></div>
+
+<section>
+  <h2><span class="label"><small>INPUT 1</small>MARKET DATA</span><button class="help noprint" data-theory="methods" title="Theory">?</button></h2>
+  <div class="grid">
+    <label class="f">Target price / unit (EUR)<input class="num" id="price" type="number" step="any"></label>
+    <label class="f">Sales volume (life cycle)<input class="num" id="volume" type="number" step="any"></label>
+    <label class="f">Target <a href="#" class="term" data-theory="integration">return on sales</a> (%)<input class="num" id="ros" type="number" step="any"></label>
+    <label class="f">Decision parameter <a href="#" class="term" data-theory="chart">q</a><input class="num" id="q" type="number" step="0.01"></label>
+  </div>
+</section>
+
+<section>
+  <h2><span class="label"><small>INPUT 2</small>FUNCTION–COMPONENT MATRIX</span><button class="help noprint" data-theory="splitting" title="Theory">?</button></h2>
+  <p class="note">Rows are product functions with their <a href="#" class="term" data-theory="benefit">customer weighting</a>, columns are components with their <a href="#" class="term" data-theory="costs">drifting cost</a>. Each cell says how many % of a function a component delivers; every row should total 100.</p>
+  <div class="scroll"><table class="matrix" id="matrix"></table></div>
+  <div class="btns noprint" style="margin-top:10px">
+    <button id="bAddF">+ Function</button>
+    <button id="bAddC">+ Component</button>
+  </div>
+</section>
+
+<section>
+  <h2><span class="label"><small>STEP 1</small>TARGET COSTS</span><button class="help noprint" data-theory="costs" title="Theory">?</button></h2>
+  <div class="scroll"><table id="t13"></table></div>
+  <div class="kpis" id="kpis"></div>
+</section>
+
+<section>
+  <h2><span class="label"><small>STEP 2</small>BENEFIT SHARES</span><button class="help noprint" data-theory="benefit" title="Theory">?</button></h2>
+  <p class="note">Benefit share of a component = Σ (share of function × customer weighting).</p>
+  <div class="scroll"><table id="t14"></table></div>
+</section>
+
+<section>
+  <h2><span class="label"><small>STEP 3</small>TARGET COST INDICES</span><button class="help noprint" data-theory="index" title="Theory">?</button></h2>
+  <p class="note"><a href="#" class="term" data-theory="index">Target cost index</a> = share of benefit ÷ share of costs. <a href="#" class="term" data-theory="costs">Allowable cost</a> of a component = share of benefit × allowable cost per unit.</p>
+  <div class="scroll"><table id="t15"></table></div>
+</section>
+
+<section>
+  <h2><span class="label"><small>STEP 4</small>CONTROL CHARTS</span><button class="help noprint" data-theory="chart" title="Theory">?</button></h2>
+  <p class="note"><a href="#" class="term" data-theory="chart">Target cost zone</a> between Y1 = √(x² − q²) and Y2 = √(x² + q²). Above the zone: cost reduction needed. Below the zone: room for higher value. What next? See <a href="#" class="term" data-theory="achievement">how target costs are achieved</a>.</p>
+  <div class="charts">
+    <div>
+      <h3>Standard: cost share = drifting cost ÷ total drifting costs</h3>
+      <div class="chartbox" id="c1"></div>
+      <div class="scroll"><table id="v1"></table></div>
+    </div>
+    <div>
+      <h3><a href="#" class="term" data-theory="extended">Extended</a>: cost share = drifting cost ÷ allowable costs per unit</h3>
+      <div class="chartbox" id="c2"></div>
+      <div class="scroll"><table id="v2"></table></div>
+    </div>
+  </div>
+</section>
+
+<hr class="groove">
+<footer class="small">Method after Seidenschwarz (1993) · example "Grape SE – gMobile 5G" from the Management Accounting reader, ch. 3</footer>
+</div>
+
+<script>
+const EXAMPLE = {
+  price: 90, volume: 500000, ros: 20, q: 0.15,
+  functions: [
+    {name: "Design", w: 14}, {name: "Handling", w: 17}, {name: "Battery life", w: 23},
+    {name: "Functionality", w: 37}, {name: "Voice quality", w: 9}
+  ],
+  components: [
+    {name: "Display", cost: 15}, {name: "Case", cost: 5}, {name: "Battery", cost: 10},
+    {name: "Electronics", cost: 30}, {name: "Software", cost: 15}
+  ],
+  m: [
+    [28, 70, 1, 1, 0],
+    [40, 10, 5, 20, 25],
+    [5, 0, 90, 5, 0],
+    [5, 5, 0, 45, 45],
+    [0, 10, 0, 90, 0]
+  ]
+};
+const BLANK = {
+  price: "", volume: "", ros: "", q: 0.15,
+  functions: [{name: "Function 1", w: ""}, {name: "Function 2", w: ""}],
+  components: [{name: "Component 1", cost: ""}, {name: "Component 2", cost: ""}],
+  m: [["", ""], ["", ""]]
+};
+const KEY = "target-costing-state";
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+if (!S || !S.functions) S = structuredClone(EXAMPLE);
+
+const $ = id => document.getElementById(id);
+const n = v => { const x = parseFloat(v); return isFinite(x) ? x : 0; };
+const fmt = (v, d = 2) => isFinite(v) ? v.toLocaleString("de-CH", {minimumFractionDigits: d, maximumFractionDigits: d}) : "–";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+// ---------- inputs ----------
+function buildInputs() {
+  for (const k of ["price", "volume", "ros", "q"]) $(k).value = S[k];
+  const C = S.components, F = S.functions;
+  let h = "<thead><tr><th>Function</th><th>Customer weighting (%)</th>";
+  C.forEach((c, j) => h += `<th><input data-c="${j}" data-k="name" value="${esc(c.name)}"><button class="x" data-delc="${j}" title="Remove component">×</button></th>`);
+  h += "<th>Row total</th></tr><tr><th class='note'>Drifting cost per unit (EUR) →</th><th></th>";
+  C.forEach((c, j) => h += `<th><input class="num" type="number" step="any" data-c="${j}" data-k="cost" value="${c.cost}"></th>`);
+  h += "<th></th></tr></thead><tbody>";
+  F.forEach((f, i) => {
+    h += `<tr><td><span style="display:flex;gap:4px"><input data-f="${i}" data-k="name" value="${esc(f.name)}"><button class="x" data-delf="${i}" title="Remove function">×</button></span></td>`;
+    h += `<td><input class="num" type="number" step="any" data-f="${i}" data-k="w" value="${f.w}"></td>`;
+    C.forEach((c, j) => h += `<td><input class="num" type="number" step="any" data-m="${i},${j}" value="${S.m[i][j] ?? ""}"></td>`);
+    h += `<td id="rs${i}"></td></tr>`;
+  });
+  h += `<tr class="total"><td>Total</td><td id="wsum"></td>${C.map(() => "<td></td>").join("")}<td></td></tr></tbody>`;
+  $("matrix").innerHTML = h;
+}
+
+document.addEventListener("input", e => {
+  const t = e.target, d = t.dataset;
+  if (["price", "volume", "ros", "q"].includes(t.id)) S[t.id] = t.value;
+  else if (d.m) { const [i, j] = d.m.split(",").map(Number); S.m[i][j] = t.value; }
+  else if (d.f) S.functions[+d.f][d.k] = t.value;
+  else if (d.c) S.components[+d.c][d.k] = t.value;
+  else return;
+  save(); compute();
+});
+document.addEventListener("click", e => {
+  const d = e.target.dataset;
+  if (d.delf !== undefined) { S.functions.splice(+d.delf, 1); S.m.splice(+d.delf, 1); }
+  else if (d.delc !== undefined) { S.components.splice(+d.delc, 1); S.m.forEach(r => r.splice(+d.delc, 1)); }
+  else return;
+  save(); buildInputs(); compute();
+});
+$("bAddF").onclick = () => { S.functions.push({name: "Function " + (S.functions.length + 1), w: ""}); S.m.push(S.components.map(() => "")); save(); buildInputs(); compute(); };
+$("bAddC").onclick = () => { S.components.push({name: "Component " + (S.components.length + 1), cost: ""}); S.m.forEach(r => r.push("")); save(); buildInputs(); compute(); };
+$("bExample").onclick = () => { S = structuredClone(EXAMPLE); save(); buildInputs(); compute(); };
+$("bClear").onclick = () => { S = structuredClone(BLANK); save(); buildInputs(); compute(); };
+
+// ---------- calculation ----------
+function compute() {
+  const F = S.functions, C = S.components, q = n(S.q);
+  const price = n(S.price), vol = n(S.volume), ros = n(S.ros) / 100;
+  const turnover = price * vol, profit = turnover * ros, allowTotal = turnover - profit;
+  const allowUnit = vol ? allowTotal / vol : 0;
+
+  const w = F.map(f => n(f.w));
+  const wsum = w.reduce((a, b) => a + b, 0);
+  const rows = F.map((f, i) => C.reduce((a, c, j) => a + n(S.m[i][j]), 0));
+  const benefit = C.map((c, j) => F.reduce((a, f, i) => a + n(S.m[i][j]) * w[i] / 100, 0)); // in %
+  const drift = C.map(c => n(c.cost));
+  const driftSum = drift.reduce((a, b) => a + b, 0);
+  const costShare = drift.map(d => driftSum ? d / driftSum * 100 : NaN);
+  const costShareExt = drift.map(d => allowUnit ? d / allowUnit * 100 : NaN);
+  const allowComp = benefit.map(b => b / 100 * allowUnit);
+  const index = benefit.map((b, j) => b / costShare[j]);
+
+  // validation
+  const msgs = [];
+  $("wsum").innerHTML = fmt(wsum, 0);
+  $("wsum").className = Math.abs(wsum - 100) > 0.01 ? "warn" : "";
+  if (Math.abs(wsum - 100) > 0.01) msgs.push(`Customer weightings add up to ${fmt(wsum, 2)}%, not 100%.`);
+  rows.forEach((r, i) => {
+    const el = $("rs" + i); el.textContent = fmt(r, 0);
+    const off = Math.abs(r - 100) > 0.01; el.className = off ? "warn" : "";
+    if (off) msgs.push(`Row "${esc(F[i].name)}" adds up to ${fmt(r, 2)}%, not 100%.`);
+  });
+  $("msgs").innerHTML = msgs.length ? `⚠ ${msgs.join("<br>⚠ ")}` : "";
+
+  // Step 1
+  $("t13").innerHTML = `
+    <tr><td>Sales volume (units)</td><td>${fmt(vol, 0)}</td></tr>
+    <tr><td>Turnover (EUR) = ${fmt(price)} × ${fmt(vol, 0)}</td><td>${fmt(turnover, 0)}</td></tr>
+    <tr><td>− Target return (EUR) = ${fmt(ros * 100, 1)}% of turnover</td><td>${fmt(profit, 0)}</td></tr>
+    <tr class="total"><td>Allowable costs (EUR)</td><td>${fmt(allowTotal, 0)}</td></tr>
+    <tr class="total"><td>Allowable costs per unit (EUR)</td><td>${fmt(allowUnit)}</td></tr>`;
+  const gap = driftSum - allowUnit;
+  $("kpis").innerHTML = `
+    <div class="kpi"><div class="l">Allowable cost per unit</div><div class="v">EUR ${fmt(allowUnit)}</div></div>
+    <div class="kpi"><div class="l">Drifting cost per unit</div><div class="v">EUR ${fmt(driftSum)}</div></div>
+    <div class="kpi"><div class="l">${gap > 0 ? "Cost reduction needed" : "Investment potential"} per unit</div><div class="v ${gap > 0 ? "badc" : "okc"}">EUR ${fmt(Math.abs(gap))}</div></div>
+    <div class="kpi"><div class="l">${gap > 0 ? "Cost reduction needed" : "Investment potential"} over life cycle</div><div class="v ${gap > 0 ? "badc" : "okc"}">EUR ${fmt(Math.abs(gap) * vol, 0)}</div></div>`;
+
+  // Step 2
+  const head = `<thead><tr><th></th><th>Total</th>${C.map(c => `<th>${esc(c.name)}</th>`).join("")}</tr></thead>`;
+  let t14 = `<thead><tr><th>Function</th><th>Customer weighting</th>${C.map(c => `<th>${esc(c.name)}</th>`).join("")}</tr></thead><tbody>`;
+  F.forEach((f, i) => t14 += `<tr><td>${esc(f.name)} [in %]</td><td>${fmt(w[i], 0)}</td>${C.map((c, j) => `<td>${S.m[i][j] === "" || n(S.m[i][j]) === 0 ? "" : fmt(n(S.m[i][j]), 0)}</td>`).join("")}</tr>`);
+  t14 += `<tr class="total"><td>Share of benefit [in %]</td><td>${fmt(wsum, 0)}</td>${benefit.map(b => `<td>${fmt(b)}</td>`).join("")}</tr></tbody>`;
+  $("t14").innerHTML = t14;
+
+  // Step 3
+  const tci = v => `<td class="b ${v < 1 ? "badc" : "okc"}">${fmt(v)}</td>`;
+  $("t15").innerHTML = head + `<tbody>
+    <tr><td>Share of benefit [in %]</td><td>${fmt(benefit.reduce((a, b) => a + b, 0), 0)}</td>${benefit.map(b => `<td>${fmt(b)}</td>`).join("")}</tr>
+    <tr><td>Share of costs [in %]</td><td>${driftSum ? 100 : "–"}</td>${costShare.map(c => `<td>${fmt(c)}</td>`).join("")}</tr>
+    <tr><td>Drifting costs [in EUR]</td><td>${fmt(driftSum)}</td>${drift.map(d => `<td>${fmt(d)}</td>`).join("")}</tr>
+    <tr><td>Allowable costs [in EUR]</td><td>${fmt(allowUnit)}</td>${allowComp.map(a => `<td>${fmt(a)}</td>`).join("")}</tr>
+    <tr><td>Target cost index</td><td></td>${index.map(tci).join("")}</tr></tbody>`;
+
+  // Step 4
+  const pts = sh => C.map((c, j) => ({name: c.name, x: benefit[j] / 100, y: sh[j] / 100}));
+  const p1 = pts(costShare), p2 = pts(costShareExt);
+  $("c1").innerHTML = chart(p1, q);
+  $("c2").innerHTML = chart(p2, q);
+  $("v1").innerHTML = verdicts(p1, q);
+  $("v2").innerHTML = verdicts(p2, q);
+}
+
+function status(p, q) {
+  const up = Math.sqrt(p.x * p.x + q * q);
+  const lo = p.x > q ? Math.sqrt(p.x * p.x - q * q) : 0;
+  if (p.y > up) return {t: "Too expensive: cut costs", c: "badc", up, lo};
+  if (p.y < lo) return {t: "Too cheap: add value", c: "warnc", up, lo};
+  return {t: "In zone", c: "okc", up, lo};
+}
+function verdicts(pts, q) {
+  return `<thead><tr><th>Component</th><th>Benefit %</th><th>Cost %</th><th>Zone</th><th>Assessment</th></tr></thead><tbody>` +
+    pts.map(p => {
+      if (!isFinite(p.y)) return `<tr><td>${esc(p.name)}</td><td colspan="4">–</td></tr>`;
+      const s = status(p, q);
+      return `<tr><td>${esc(p.name)}</td><td>${fmt(p.x * 100)}</td><td>${fmt(p.y * 100)}</td><td>${fmt(s.lo * 100, 1)}–${fmt(s.up * 100, 1)}</td><td><span class="pill ${s.c}">${s.t}</span></td></tr>`;
+    }).join("") + "</tbody>";
+}
+
+function chart(pts, q) {
+  const valid = pts.filter(p => isFinite(p.x) && isFinite(p.y));
+  const mx = Math.max(0.5, ...valid.map(p => Math.max(p.x, p.y) + 0.05));
+  const max = Math.ceil(mx * 10) / 10;
+  const W = 480, H = 400, L = 46, R = 16, T = 16, B = 40;
+  const X = v => L + v / max * (W - L - R), Y = v => H - B - v / max * (H - T - B);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Target cost control chart">`;
+  // zone polygon
+  const N = 80, upper = [], lower = [];
+  for (let k = 0; k <= N; k++) {
+    const x = max * k / N;
+    upper.push([x, Math.min(Math.sqrt(x * x + q * q), max)]);
+    lower.push([x, x > q ? Math.sqrt(x * x - q * q) : 0]);
+  }
+  const poly = [...upper, ...[...lower].reverse()].map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(" ");
+  s += `<polygon points="${poly}" fill="var(--zone)" stroke="none"/>`;
+  // grid & ticks
+  for (let v = 0; v <= max + 1e-9; v += 0.1) {
+    s += `<line class="gr" x1="${X(v)}" y1="${Y(0)}" x2="${X(v)}" y2="${Y(max)}"/><line class="gr" x1="${X(0)}" y1="${Y(v)}" x2="${X(max)}" y2="${Y(v)}"/>`;
+    s += `<text class="tick" x="${X(v)}" y="${Y(0) + 15}" text-anchor="middle">${Math.round(v * 100)}%</text>`;
+    s += `<text class="tick" x="${X(0) - 6}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  }
+  // boundaries
+  const path = arr => "M" + arr.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(" L");
+  s += `<path d="${path(upper)}" fill="none" stroke="var(--ink)" stroke-width="1.3"/>`;
+  s += `<path d="${path(lower.filter(([x]) => x >= q))}" fill="none" stroke="var(--ink)" stroke-width="1.3"/>`;
+  s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(max)}" y2="${Y(max)}" stroke="var(--muted)" stroke-dasharray="5 4"/>`;
+  s += `<line class="ax" x1="${X(0)}" y1="${Y(0)}" x2="${X(max)}" y2="${Y(0)}"/><line class="ax" x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(max)}"/>`;
+  s += `<text x="${X(max)}" y="${H - 4}" text-anchor="end" class="tick">Share of benefits</text>`;
+  s += `<text x="${L - 40}" y="${T - 4}" class="tick">Share of costs</text>`;
+  // points
+  valid.forEach(p => {
+    const st = status(p, q);
+    const col = st.c === "badc" ? "var(--bad)" : st.c === "warnc" ? "var(--warn)" : "var(--ok)";
+    const px = X(Math.min(p.x, max)), py = Y(Math.min(p.y, max));
+    s += `<rect x="${px - 5}" y="${py - 5}" width="10" height="10" transform="rotate(45 ${px} ${py})" fill="${col}"/>`;
+    s += `<text x="${px + 9}" y="${py - 7}" font-weight="600">${esc(p.name)}</text>`;
+  });
+  return s + "</svg>";
+}
+
+buildInputs(); compute();
+</script>
+<dialog id="theory" aria-labelledby="tTitle">
+  <div class="titlebar"><span id="tTitle">Theory</span><button id="tClose" aria-label="Close">×</button></div>
+  <div class="tbody" id="tBody"></div>
+  <div class="tnav"><button id="tPrev">« Prev</button><button data-theory="toc">Contents</button><button id="tNext">Next »</button></div>
+</dialog>
+
+<script>
+// Study notes for each topic, summarised from the Management Accounting reader, ch. 3 (pages = reader page numbers).
+const THEORY = {
+  overview: {title: "What is Target Cost Management?", ref: "Reader ch. 3.1, p. 8", html: `
+    <p>Target Cost Management (TCM) shapes a product's cost structure <b>early, in product and process design</b>, so that it fits what the market will pay and what customers actually value. It was developed systematically by Japanese car makers (above all Toyota) from the 1960s and spread to the US and Germany from the late 1980s.</p>
+    <h4>COST-PLUS VS. PRICE-MINUS</h4>
+    <table><tr><th>Traditional (progressive)</th><th>Target costing (retrograde)</th></tr>
+    <tr><td>Costs + profit mark-up = price</td><td>Market price − target profit = allowable costs</td></tr>
+    <tr><td>"What <i>will</i> the product cost?"</td><td>"What <i>may</i> the product cost?"</td></tr>
+    <tr><td>Inside-out view of the company</td><td>Outside-in view of market and customer</td></tr></table>
+    <div class="formula">Target costs = Target price − Target profit</div>
+    <p>The <b>allowable costs</b> are then compared with the <b>drifting costs</b> (what the product would cost with today's technology and processes):</p>
+    <ul><li>Allowable &lt; Drifting → cost reduction needed</li><li>Allowable &gt; Drifting → room to invest in the product</li></ul>
+    <h4>THREE PHASES (FIG. 12)</h4>
+    <ol><li><b>Target cost determination</b> for the whole product → <a href="#" data-theory="costs">Step 1</a></li>
+    <li><b>Target cost splitting</b> onto components via the function–component matrix → <a href="#" data-theory="splitting">Steps 2–3</a></li>
+    <li><b>Target cost achievement</b>, monitored with indices and the control diagram → <a href="#" data-theory="chart">Step 4</a></li></ol>`},
+
+  principles: {title: "Six principles & when to use TCM", ref: "Reader ch. 3.1, pp. 8–9", html: `
+    <ol><li><b>Price-led costing</b>: in buyer markets the market price is the starting point of the calculation.</li>
+    <li><b>Focus on customers</b>: every function is designed around customer value, so costs must follow the achievable price.</li>
+    <li><b>Focus on design</b>: design errors are hard to fix later, especially with short life cycles, so concentrate on the development phase.</li>
+    <li><b>Cross-functional involvement</b>: multidisciplinary teams instead of purely engineering-driven development.</li>
+    <li><b>Life-cycle orientation</b>: include maintenance, repair, warranty and service costs, not just the moment of sale.</li>
+    <li><b>Value-chain involvement</b>: bring customers and suppliers into the target costing team.</li></ol>
+    <p>Linking functions, components and component costs creates <b>cost-benefit transparency</b>. Employees are steered by concrete market requirements rather than anonymous internal targets (<b>motivational function</b>), ideally backed by incentive systems.</p>
+    <h4>WHERE IT FITS</h4>
+    <ul><li>Many variants, short life cycles, lean production, intense competition and price pressure</li>
+    <li>Products of high value and complexity with enough <b>design freedom</b></li>
+    <li><b>Not</b> suitable for highly standardised or single-component products (e.g. screws)</li></ul>`},
+
+  methods: {title: "Five ways to determine target costs", ref: "Reader ch. 3.2, pp. 9–10", html: `
+    <p>Phase 1 starts by collecting all relevant market data, already with an interdisciplinary team, not market research alone.</p>
+    <table><tr><th>Method</th><th>Target costs derived from…</th></tr>
+    <tr><td><b>Market into company</b></td><td>achievable market price minus planned profit</td></tr>
+    <tr><td>Out of company</td><td>the firm's technical and management skills, experience and potential</td></tr>
+    <tr><td>Into and out of company</td><td>a combination of the two above</td></tr>
+    <tr><td>Out of competitor</td><td>competitors' costs</td></tr>
+    <tr><td>Out of standard costs</td><td>own standard costs minus reduction discounts</td></tr></table>
+    <p><b>Market into company</b> is the purest form of target costing because the targets come as close as possible to what the market allows; the others are only indirectly market-oriented. This calculator uses it.</p>
+    <div class="tip">Watch out: if the market price is wrong, every target cost derived from it is wrong too. Choosing the price needs long-term thinking (price level, price dynamics, timing of market entry), and a newcomer usually can't charge the same as established players.</div>`},
+
+  costs: {title: "Allowable, drifting and target costs", ref: "Reader ch. 3.2, p. 10", html: `
+    <div class="formula">Turnover      = target price × life-cycle volume
+− Target profit = turnover × return on sales
+= Allowable costs (total)  →  ÷ volume = per unit</div>
+    <h4>THE THREE COST TERMS</h4>
+    <ul><li><b>Allowable costs</b>: the maximum cost the market permits. <i>In the broader sense</i> they cover all costs over the life cycle; subtract the budgets of overhead areas (R&amp;D, marketing/sales, administration) to get allowable costs <i>in the strict sense</i>.</li>
+    <li><b>Drifting costs</b>: what the product would cost if current technology and process standards were kept; found by a progressive calculation from own standard costs. Ideally full costs, though in practice often only parts (variable, manufacturing or material costs).</li>
+    <li><b>Target costs</b>: set <b>between</b> drifting and allowable costs. They must be realistic and achievable to motivate. The tougher the competition and cost pressure, the closer they should be to the allowable costs (ideally identical).</li></ul>
+    <div class="tip">gMobile: 90 × 500,000 = EUR 45M turnover; 20% return = EUR 9M; allowable = EUR 36M = EUR 72/unit. Drifting costs are EUR 75, so EUR 3 per unit (EUR 1.5M over the life cycle) must be cut.</div>`},
+
+  splitting: {title: "Target cost splitting", ref: "Reader ch. 3.2, p. 11", html: `
+    <p>A target for the whole product is not enough for detailed control; it has to be broken down to a level where people can act. Two views meet here: the <b>customer</b> sees a product as a bundle of <b>functions</b>; the <b>company</b> sees it as a set of <b>components</b>. Splitting translates customer language into company language.</p>
+    <table><tr><th>Component method</th><th>Functional method</th></tr>
+    <tr><td>Assumes exactly one component fulfils each function</td><td>Product = combination of functions, fulfilled by several components (and services)</td></tr>
+    <tr><td>Uses cost structures of predecessors, similar or competing products</td><td>Starts directly from customer wishes</td></tr>
+    <tr><td>Simple, but ignores customer requirements and "freezes" existing cost structures</td><td>Links functions and components in a <b>function–component matrix</b></td></tr>
+    <tr><td>For low-innovation, material/technology-driven products</td><td>For complex, extensive new developments</td></tr></table>
+    <p>The matrix cells are estimated in an interdisciplinary workshop (controlling, development, production): what % of each function each component delivers. Each row adds up to 100%.</p>
+    <div class="tip">gMobile: design is delivered 28% by the display, 70% by the case and 1% each by battery and electronics.</div>`},
+
+  benefit: {title: "Customer weightings & benefit shares", ref: "Reader ch. 3.2, pp. 13–14 (example)", html: `
+    <p>The <b>customer weighting</b> says how important each function is to customers (from market research, e.g. surveys on a prototype or conjoint analysis). The weightings add up to 100%.</p>
+    <p>The <b>benefit share</b> of a component is its contribution to total customer value: multiply each matrix cell by the function's weighting and add up the column.</p>
+    <div class="formula">Benefit share(component) = Σ  matrix %(function, component) × weighting(function)</div>
+    <div class="tip">Display: 28 × 0.14 + 40 × 0.17 + 5 × 0.23 + 5 × 0.37 = 13.72%</div>
+    <p>The <b>component's allowable (target) cost</b> follows directly:</p>
+    <div class="formula">Target cost(component) = benefit share × allowable cost per unit
+Display: 13.72% × 72 = EUR 9.88</div>`},
+
+  index: {title: "Target cost index", ref: "Reader ch. 3.2, p. 11; example p. 15", html: `
+    <p>The ideal is that the resources spent on a component exactly match the customer benefit it provides.</p>
+    <div class="formula">Target cost index = benefit share (%) ÷ cost share (%)
+cost share = drifting cost of component ÷ total drifting costs</div>
+    <table><tr><th>Index</th><th>Meaning</th><th>Action</th></tr>
+    <tr><td>&lt; 1</td><td>Component costs more than its benefit justifies: <b>too expensive</b></td><td>Look for cost reduction</td></tr>
+    <tr><td>= 1</td><td>Ideal: cost matches benefit</td><td>–</td></tr>
+    <tr><td>&gt; 1</td><td>Component is <b>too cheap</b> relative to its benefit</td><td>Possible value increase</td></tr></table>
+    <div class="tip">gMobile: display 0.69 and electronics 0.74 are too expensive; case 2.14, battery 1.63 and software 1.05 are rather too cheap. An index of exactly 1 is unrealistic, so a tolerance zone is used → <a href="#" data-theory="chart">control chart</a>.</div>`},
+
+  chart: {title: "Target cost control diagram & q", ref: "Reader ch. 3.2, pp. 11–12; Seidenschwarz 1993", html: `
+    <p>Each component is plotted with its <b>benefit share on the x-axis</b> and its <b>cost share on the y-axis</b>. The 45° line (y = x) is the ideal index of 1.</p>
+    <div class="formula">Upper limit  Y2 = √(x² + q²)
+Lower limit  Y1 = √(x² − q²)   (for x &gt; q)</div>
+    <ul><li><b>Above the zone</b> → zone for <b>cost reduction</b> requirements</li>
+    <li><b>Inside the zone</b> → deviation still economically justifiable</li>
+    <li><b>Below the zone</b> → zone for <b>component value enhancement</b></li></ul>
+    <h4>THE FUNNEL SHAPE</h4>
+    <p>The zone is wide for components with a small benefit share and narrows as importance grows: big components must match their benefit closely, small ones may deviate more.</p>
+    <h4>CHOOSING q</h4>
+    <p>q is set by top management according to the company and market situation:</p>
+    <ul><li>Target costs set close to allowable costs → <b>narrower</b> zone, <b>smaller</b> q</li>
+    <li>More experience in achieving target costs → <b>wider</b> zone, <b>larger</b> q</li></ul>
+    <div class="tip">gMobile (q = 0.15): display, software and case are inside the zone; electronics should be examined for cost reduction, battery for higher-value functionality.</div>`},
+
+  extended: {title: "Extended control diagram", ref: "Reader ch. 3.2, p. 12; Fischer/Schmitz 1994", html: `
+    <p>The standard diagram only compares components with each other: cost shares always add up to 100%, so it hides whether the product <i>as a whole</i> is too expensive.</p>
+    <p>The extension measures each component's drifting cost against the <b>allowable costs of the whole product</b> instead:</p>
+    <div class="formula">Extended cost share = drifting cost(component) ÷ allowable cost per unit</div>
+    <p>Now the overall cost level shows up: if drifting costs exceed allowable costs, the points shift upwards.</p>
+    <div class="tip">gMobile: drifting EUR 75 vs allowable EUR 72. Display's cost share rises from 20.0% to 20.8%, just above its upper limit of 20.3%, so it now also needs cost reduction. Compare the two charts side by side on the page.</div>`},
+
+  achievement: {title: "Achieving the target costs", ref: "Reader ch. 3.2, pp. 12–13 (Fig. 14)", html: `
+    <p>Once the target costs are approved, the <b>implementation phase</b> begins. Measures cover the whole life cycle but work best in development and production planning, where design freedom is still large.</p>
+    <table><tr><th>Engineer-oriented</th><th>Management-oriented</th></tr>
+    <tr><td><ul><li>Construction-accompanying calculation</li><li>Simultaneous engineering / resident engineers</li><li>Reverse engineering</li><li>Value analysis</li><li>Design-to-cost</li><li>Design for manufacture and assembly (DFMA)</li><li>Rapid prototyping</li></ul></td>
+    <td><ul><li>Benchmarking</li><li>Zero-base budgeting</li><li>Process cost management</li><li>Life-cycle calculation</li><li>Kaizen / continuous improvement (CIP)</li><li>Supplier management</li><li>Outsourcing</li></ul></td></tr></table>`},
+
+  integration: {title: "Target pricing, profit planning & costing", ref: "Reader ch. 3.3, pp. 15–17", html: `
+    <p>Focusing only on costs is risky: price options are ignored, and a flat target return ignores shareholders' expectations and capital employed. All three parts of <b>target costs = target price − target profit</b> must be planned together, a "magic triangle" of price, benefit and cost.</p>
+    <ol><li><b>Target price</b>: what will customers pay for the expected benefit?</li>
+    <li><b>Target profit</b>: what return can be delivered to shareholders?</li>
+    <li><b>Target costs</b>: what may the product cost given price and profit?</li></ol>
+    <h4>TARGET PRICING</h4>
+    <p>A customer buys only if net benefit (benefit − price) is not negative; aim for a benefit-price ratio &gt; 1. Break the product into sub-functions and measure part-benefits, e.g. with <b>conjoint measurement</b>. Consider time (life cycle, price erosion, price elasticity) and regional differences (taxes, currencies).</p>
+    <h4>PROFIT PLANNING</h4>
+    <p>Classic TCM uses <b>return on sales</b> because no capital has to be allocated to products and products are easy to compare. But it is static and operational, so today it is linked to a value-oriented, multi-period target, e.g. a target capital value / EVA based on the cost of capital plus risk premiums.</p>
+    <h4>INTERFACES (FIG. 16)</h4>
+    <p>Target budgets (overheads), target investment, target kaizen (experience effects), target supplier / relationship value.</p>`},
+
+  pitfalls: {title: "Exam checklist", ref: "Study aid (not from the reader)", html: `
+    <ul><li>Customer weightings must total 100%, and so must each <b>row</b> of the matrix (one function split over components). Columns don't need to.</li>
+    <li>Benefit share uses weightings as decimals (14% → 0.14) times matrix % → result in %.</li>
+    <li>Standard cost share = drifting cost ÷ <b>total drifting costs</b>, not ÷ allowable costs (that's the extended diagram).</li>
+    <li>Index = benefit ÷ cost. &lt; 1 = too expensive, &gt; 1 = too cheap. Don't flip it.</li>
+    <li>Component target cost = benefit share × <b>allowable</b> cost per unit (72), not × drifting cost.</li>
+    <li>Zone check: compute Y2 = √(x² + q²) and Y1 = √(x² − q²) with x, q as decimals; for x ≤ q there is no lower limit.</li>
+    <li>Target costs lie between drifting and allowable costs; they are not automatically equal to allowable costs.</li></ul>`},
+
+  example: {title: "Case: Grape SE – gMobile 5G", ref: "Reader ch. 3.2, pp. 13–15", html: `
+    <p>Grape SE develops a fifth-generation phone. A customer survey on a prototype gives five functions and their weightings: design 14%, handling 17%, battery life 23%, functionality 37%, voice quality 9%.</p>
+    <ul><li>Target price EUR 90, 500,000 units over a ≤ 3-year life cycle, no discounting</li>
+    <li>Target return on sales 20% → allowable costs EUR 72 per unit</li>
+    <li>Drifting costs: display 15, housing 5, battery 10, electronics 30, software 15 (= EUR 75)</li>
+    <li>Function–component matrix from an interdisciplinary workshop</li>
+    <li>q = 0.15 based on experience in the "Mobile" business unit</li></ul>
+    <p>Press <b>Load gMobile example</b> to see every step calculated.</p>`}
+};
+const ORDER = ["overview", "principles", "methods", "costs", "splitting", "benefit", "index", "chart", "extended", "achievement", "integration", "example", "pitfalls"];
+THEORY.toc = {title: "Theory – Contents", ref: "Source: Management Accounting reader, ch. 3 Target Cost Management", html:
+  `<p>Study notes behind every step of the calculator. You can also click any <b>?</b> button or <a href="#" data-theory="index" class="term">underlined term</a> on the page.</p><ol class="toc">` +
+  ORDER.map(k => `<li><a href="#" data-theory="${k}">${THEORY[k].title}</a></li>`).join("") + "</ol>"};
+
+let cur = "toc";
+function openTheory(k) {
+  cur = k; const t = THEORY[k];
+  $("tTitle").textContent = t.title;
+  $("tBody").innerHTML = t.html + `<div class="ref">${t.ref}</div>`;
+  $("tBody").scrollTop = 0;
+  const i = ORDER.indexOf(k);
+  $("tPrev").disabled = i <= 0; $("tNext").disabled = i === ORDER.length - 1;
+  if (!$("theory").open) $("theory").showModal();
+}
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-theory]");
+  if (!el) return;
+  e.preventDefault(); openTheory(el.dataset.theory);
+});
+$("tClose").onclick = () => $("theory").close();
+$("theory").addEventListener("click", e => { if (e.target === $("theory")) $("theory").close(); });
+$("tPrev").onclick = () => { const i = ORDER.indexOf(cur); openTheory(ORDER[i <= 0 ? 0 : i - 1]); };
+$("tNext").onclick = () => { const i = ORDER.indexOf(cur); openTheory(ORDER[Math.min(ORDER.length - 1, i + 1)]); };
+</script>
+
+</body>
+</html>
